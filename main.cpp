@@ -33,6 +33,9 @@ ace CAN BE low or high, just not at the same time
 * 
 * STANDARD 52 CARD DECK (no joker cards)
 
+THIS IS NO-LIMIT TEXAS HOLD 'EM!!!!!!
+
+minimum raise = previous bet
 
 */
 
@@ -73,10 +76,7 @@ enum Action{
     CALL,
     RAISE
 }; // enum for player moves
-enum Type{
-    USER,
-    BOT
-}; // decision types for action
+
 
 // STRUCTS
 struct card{
@@ -85,24 +85,42 @@ struct card{
     string symbol;
     enum Symbol value;
 };
-struct player{
-    pair<card, card> cards;
-    string name;
-    int chips; // in money value $$$
-    enum PokerHand hand;
-    enum Action move;
-    enum Type type;
+
+// CLASSES
+class Player{
+    public:
+        // INSTANCE_VARIABLES
+        pair<card, card> cards;
+        string name;
+        int chips; // in money value $$$
+        int betted;
+
+        // CONSTRUCTOR
+        Player(string _name, int _chips){
+            name = _name;
+            chips = _chips;
+            betted = 0;
+            cards = {};
+        }
+
+        // CLASS_FUNCTIONS
+        Action getMove();
 };
+
+Action Player::getMove(){
+    Action move = FOLD;
+    return move;
+}
 
 // FUNCTION HEADERS
 vector<card> generateDeck();
 void copyDeck(vector<card> &deck, vector<card> &copy);
 void printDeck(vector<card> &deck);
 void shuffleDeck(vector<card> &deck);
-void printPlayerInfo(player* &user);
-void printPlayers(map<string, player*> &players);
-void giveCards(map<string, player*> &players, vector<card> &deck);
-void addPlayer(string name, enum Type type, map<string, player*> &players);
+void printPlayerInfo(Player* &user);
+void printPlayers(map<string, Player*> &players);
+void giveCards(map<string, Player*> &players, vector<card> &deck);
+void addPlayer(string name, map<string, Player*> &players);
 
 // CONSTANTS
 vector<card> STANDARD_DECK {};
@@ -167,19 +185,19 @@ void shuffleDeck(vector<card> &deck){
     }
     
 }
-void printPlayerInfo(player* &user){
+void printPlayerInfo(Player* &user){
     cout << "-=" << user->name << "=-\n";
     cout << user->cards.first.name;
     cout << " " << user->cards.second.name;
     cout << " $" << user->chips << endl;
 }
-void printPlayers(map<string, player*> &players){
-    for (map<string, player*>::iterator itr = players.begin(); itr != players.end(); itr++){
+void printPlayers(map<string, Player*> &players){
+    for (map<string, Player*>::iterator itr = players.begin(); itr != players.end(); itr++){
         printPlayerInfo(itr->second);
     }
 }
-void giveCards(map<string, player*> &players, vector<card> &deck){
-    for (map<string, player*>::iterator itr = players.begin(); itr != players.end(); itr++){
+void giveCards(map<string, Player*> &players, vector<card> &deck){
+    for (map<string, Player*>::iterator itr = players.begin(); itr != players.end(); itr++){
         pair<card, card> newHand;
         newHand.first = deck.back();
         deck.pop_back();
@@ -188,18 +206,10 @@ void giveCards(map<string, player*> &players, vector<card> &deck){
         itr->second->cards = newHand;
     }
 }
-void addPlayer(string name, enum Type type, map<string, player*> &players){
-    player *p = new player;
-    p->cards = {};
-    p->name = name;
-    p->chips = INIT_MONEY;
-    p->hand = NONE;
-    p->move = FOLD;
-    p->type = type;
-    
-    players.insert(pair<string, player*>(name, p));
+void addPlayer(string name, map<string, Player*> &players){
+    players.insert(pair<string, Player*>(name, new Player(name, INIT_MONEY)));
 }
-void addBots(map<string, player*> &players){
+void addBots(map<string, Player*> &players){
     cout << "Warning! Duplicate names will not be included.\n";
     while (true){
         string name = readLine("Name: ");
@@ -210,7 +220,7 @@ void addBots(map<string, player*> &players){
             continue;
         }
     
-        addPlayer(name, BOT, players);
+        addPlayer(name, players);
         
         if (players.size() >= MAX_PLAYERS) {
             cout << "No more players can be added. Automatically starting game.\n";
@@ -218,7 +228,7 @@ void addBots(map<string, player*> &players){
         }
     }
 }
-void play(map<string, player*> &players){
+void play(map<string, Player*> &players){
     
 }
 
@@ -231,8 +241,8 @@ int main()
     
     // INITIALIZATION 
     vector<card> game_deck {};
-    map<string, player*> victims {};
-    vector<pair<int, player*> > pots {};
+    map<string, Player*> victims {};
+    map<Player*, int> bets {};
     STANDARD_DECK = generateDeck();
     copyDeck(STANDARD_DECK, game_deck);
     shuffleDeck(game_deck);
@@ -242,7 +252,7 @@ int main()
     // USER
     cout << "Let's Play Poker! By yourself. Against my bots." << endl;
     string name = readLine("User's Name: ");
-    addPlayer(name, USER, victims);
+    addPlayer(name, victims);
     
     
     // OTHER PLAYERS
@@ -260,7 +270,12 @@ int main()
         
         break;
     }
-    
+
+
+    // DEALLOC PLAYERS
+    for (map<string, Player*>::iterator itr = victims.begin(); itr != victims.end(); itr++){
+        delete itr->second;
+    }
 
     return 0;
     
