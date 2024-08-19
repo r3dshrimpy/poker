@@ -76,6 +76,11 @@ enum Action{
     CALL,
     RAISE
 }; // enum for player moves
+enum Button{
+    NO_BLIND,
+    SMALL_BLIND,
+    BIG_BLIND
+};
 
 
 // STRUCTS
@@ -94,6 +99,7 @@ class Player{
         string name;
         int chips; // in money value $$$
         int betted;
+        Button button;
 
         // CONSTRUCTOR
         Player(string _name, int _chips){
@@ -101,6 +107,7 @@ class Player{
             chips = _chips;
             betted = 0;
             cards = {};
+            button = NO_BLIND;
         }
 
         // CLASS_FUNCTIONS
@@ -189,7 +196,20 @@ void printPlayerInfo(Player* &user){
     cout << "-=" << user->name << "=-\n";
     cout << user->cards.first.name;
     cout << " " << user->cards.second.name;
-    cout << " $" << user->chips << endl;
+    cout << " $" << user->chips;
+    cout << " ";
+    switch (user->button){
+        case NO_BLIND:
+            cout << "NO BLIND";
+            break;
+        case SMALL_BLIND:
+            cout << "SMALL BLIND";
+            break;
+        case BIG_BLIND:
+            cout << "BIG BLIND";
+            break;
+    }
+    cout << endl;
 }
 void printPlayers(map<string, Player*> &players){
     for (map<string, Player*>::iterator itr = players.begin(); itr != players.end(); itr++){
@@ -228,6 +248,34 @@ void addBots(map<string, Player*> &players){
         }
     }
 }
+void addButtons(map<string, Player*> &players){
+    map<string, Player*>::iterator itr = players.begin();
+    itr->second->button = BIG_BLIND;
+    itr++;
+    itr->second->button = SMALL_BLIND;
+}
+void cycleButtons(map<string, Player*> &players){
+    for (map<string, Player*>::iterator itr = players.begin(); itr != players.end(); itr++){
+
+        if (itr->second->button != BIG_BLIND) continue;
+
+        itr->second->button = NO_BLIND;
+
+        itr++;
+        if (itr == players.end()){ // if hitmax, go back to start
+            itr = players.begin();
+        }
+        itr->second->button = BIG_BLIND;
+
+        itr++;
+        if (itr == players.end()){ // if hit max, go back to start.
+            itr = players.begin();
+        }
+        itr->second->button = SMALL_BLIND;
+
+        return;
+    }
+}
 void play(map<string, Player*> &players){
     
 }
@@ -257,7 +305,9 @@ int main()
     
     // OTHER PLAYERS
     addBots(victims);
-    
+
+    // GAME INITIALIZATION
+    addButtons(victims);
     
     // PLAY POKER
     while (true){
