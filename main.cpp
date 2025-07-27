@@ -19,7 +19,7 @@ you can only raise twice per turn
 low to high
 ace CAN BE low or high, just not at the same time
 
-* Basic Poker Rules
+* Basic Poker Rules PP!
 * 
 * Fold, Bet, Check
 * 
